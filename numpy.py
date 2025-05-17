@@ -1,43 +1,44 @@
-"""Small stub of minimal ``numpy`` functionality.
+"""Minimal ``numpy`` shim used when the real package is missing.
 
-This module defines only the parts of NumPy that are required by the tests in
-this repository.  It should only be imported if the real ``numpy`` package is
-not available.  The implementations here are very limited and exist solely so
-the repository can run in restricted environments.
+This file is deliberately named ``numpy`` so that ``import numpy`` succeeds in
+environments where the library is not installed.  When executed, it first
+checks whether a genuine NumPy installation is available.  If so, the real
+package is loaded and all of its symbols are re-exported.  Otherwise a tiny
+subset of functionality required by the tests is provided.
 
-The real SciPy package expects ``numpy.show_config`` to exist when it is
-imported.  A user hit an ``ImportError`` because this stub did not implement
-that function.  To keep the fallback working in environments where SciPy might
-be installed, ``show_config`` and a minimal ``numpy.version`` submodule are
-provided.
+The fallback implements just ``mean`` and ``sum`` as well as a small stub of
+``numpy.show_config`` and ``numpy.version`` so that parts of SciPy expecting
+those attributes do not fail.
 """
 
-import builtins
+from __future__ import annotations
+
+import importlib.machinery
+import importlib.util
 import sys
-import types
 
-def mean(seq):
-    seq = list(seq)
-    return builtins.sum(seq) / len(seq) if seq else 0.0
+_spec = importlib.machinery.PathFinder().find_spec(__name__, sys.path[1:])
+if _spec is not None:
+    _module = importlib.util.module_from_spec(_spec)
+    sys.modules[__name__] = _module
+    _spec.loader.exec_module(_module)
+    globals().update(_module.__dict__)
+else:
+    import builtins
+    import types
 
-def sum(seq):
-    return builtins.sum(seq)
+    def mean(seq):
+        seq = list(seq)
+        return builtins.sum(seq) / len(seq) if seq else 0.0
 
+    def sum(seq):
+        return builtins.sum(seq)
 
-def show_config():
-    """Minimal stub for :func:`numpy.show_config`.
+    def show_config():
+        """Minimal stub for :func:`numpy.show_config`."""
+        print("NumPy stub: no configuration available")
 
-    The real function prints NumPy's build configuration.  Here we simply
-    output a short message so that callers expecting the function do not fail.
-    """
-    print("NumPy stub: no configuration available")
-
-
-# Provide a bare-bones ``numpy.version`` submodule so that packages importing
-# ``from numpy.version import version`` succeed.
-version = types.ModuleType("numpy.version")
-version.version = "0.0.0"
-sys.modules[__name__ + ".version"] = version
-
-# Also expose ``__version__`` at the top level for compatibility.
-__version__ = version.version
+    version = types.ModuleType("numpy.version")
+    version.version = "0.0.0"
+    sys.modules[__name__ + ".version"] = version
+    __version__ = version.version
