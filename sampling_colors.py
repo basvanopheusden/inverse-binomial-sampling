@@ -4,12 +4,10 @@ from __future__ import annotations
 
 _COLOR_MAP = {
     "ibs": "tab:blue",
-    "fixed_1": "tab:orange",
-    "fixed_2": "tab:green",
-    "fixed_3": "tab:red",
-    "fixed_5": "tab:purple",
-    "fixed_8": "tab:brown",
-    "fixed_10": "tab:pink",
+    "naive": "tab:orange",
+    "fixed": "tab:green",
+    "laplace": "tab:red",
+    "jeffreys": "tab:purple",
 }
 
 
