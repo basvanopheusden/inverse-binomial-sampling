@@ -64,7 +64,6 @@ FIXED_SAMPLING_METHODS: Dict[str, Callable[[Iterable[float]], float]] = {
 
 # Mapping from method name to the corresponding prior parameters
 FIXED_SAMPLING_PARAMS: Dict[str, Tuple[float, float]] = {
-    "naive": (0.0, 0.0),
     "fixed": (1.0, 1.0),
     "laplace": (1.0, 2.0),
     "jeffreys": (0.5, 1.0),
