@@ -42,8 +42,14 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
     stimuli = [None] * n_trials
     responses = [rng.random() < p for _ in range(n_trials)]
 
+    # Use a smaller range for the IBS repeat counts so that the
+    # resulting average sample counts for the two methods are
+    # roughly comparable.  The fixed sampler draws exactly
+    # ``M`` samples per trial while a single IBS repeat requires
+    # about twice as many samples on average.  Limiting the number
+    # of repeats keeps both curves on a similar scale.
     fixed_samples = [1, 2, 3, 5, 8, 10]
-    ibs_repeats = [1, 2, 3, 5, 8, 10]
+    ibs_repeats = [1, 2, 3, 4, 5]
 
     results = {"fixed": [], "ibs": []}
 
