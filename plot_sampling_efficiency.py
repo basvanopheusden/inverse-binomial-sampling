@@ -8,6 +8,7 @@ import statistics
 from ibs import ibs_loglikelihood
 from setup_matplotlib import setup_matplotlib
 from sampling_colors import get_color
+from fixed_sampling import fixed_loglikelihood
 
 try:
     from matplotlib import pyplot as plt
@@ -23,19 +24,6 @@ def bernoulli_model(rng):
 
     return model
 
-
-def fixed_loglikelihood(stimuli, responses, model, theta, M):
-    """Estimate log-likelihood with a fixed number of samples per trial."""
-    log_lik = 0.0
-    for s, r_obs in zip(stimuli, responses):
-        matches = 0
-        for _ in range(M):
-            if model(theta, s) == r_obs:
-                matches += 1
-        prob = matches / M if matches else 1e-12
-        log_lik += math.log(prob)
-    total_samples = M * len(responses)
-    return log_lik, total_samples
 
 
 def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
@@ -59,8 +47,9 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
         samples = []
         for rep in range(repetitions):
             rng_run = random.Random(seed + rep)
-            ll, n = fixed_loglikelihood(stimuli, responses,
-                                        bernoulli_model(rng_run), p, M)
+            ll, n = fixed_loglikelihood(
+                stimuli, responses, bernoulli_model(rng_run), p, M, method="clipped"
+            )
             estimates.append(ll)
             samples.append(n)
         mean_ll = statistics.mean(estimates)
