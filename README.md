@@ -1,1 +1,12 @@
-# inverse-binomial-sampling
+# Inverse Binomial Sampling
+
+This repository contains a minimal implementation of the *inverse binomial sampling* (IBS) method described in the paper ["Unbiased and Efficient Log-Likelihood Estimation with Inverse Binomial Sampling"](https://arxiv.org/abs/2001.03985v3).
+
+IBS provides unbiased estimates of the log-likelihood for models that can generate stochastic responses but do not have a tractable likelihood function. For each observation, the simulator is repeatedly sampled until its output matches the recorded response. If `K` samples are required, the contribution of that observation to the log-likelihood is given by `psi(1) - psi(K)` where `psi` is the digamma function. Summing over all observations yields an unbiased estimate of the total log-likelihood.
+
+## Matplotlib setup
+
+To ensure all figures share the same look across experiments, this repository
+provides a small helper in `setup_matplotlib.py`.  Import and call
+`setup_matplotlib()` at the start of your scripts to apply a consistent style for
+all plots.
