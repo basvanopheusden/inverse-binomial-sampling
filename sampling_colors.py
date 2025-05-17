@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+# Pastel palette from colorhunt.co
 _COLOR_MAP = {
-    "ibs": "tab:blue",
-    "naive": "tab:orange",
-    "fixed": "tab:green",
-    "laplace": "tab:red",
-    "jeffreys": "tab:purple",
+    "ibs": "#A0C4FF",
+    "naive": "#FFADAD",
+    "fixed": "#FFD6A5",
+    "laplace": "#FDFFB6",
+    "jeffreys": "#CAFFBF",
 }
 
 

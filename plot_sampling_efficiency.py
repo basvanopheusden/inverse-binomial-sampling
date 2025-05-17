@@ -80,6 +80,7 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
     rng = random.Random(seed)
     stimuli = [None] * n_trials
     responses = [rng.random() < p for _ in range(n_trials)]
+    true_ll = sum(math.log(p if r else 1.0 - p) for r in responses)
 
     # Use a smaller range for the IBS repeat counts so that the
     # resulting average sample counts for the two methods are
@@ -128,39 +129,40 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
         avg_samples = statistics.mean(samples)
         results["ibs"].append((avg_samples, mean_ll, std_ll))
 
-    return results
+    return results, true_ll
 
 
 def main():
     setup_matplotlib()
-    results = run_experiment()
+    results, true_ll = run_experiment()
 
     ibs_samp = [r[0] for r in results["ibs"]]
-    ibs_mean = [r[1] for r in results["ibs"]]
+    ibs_bias = [r[1] - true_ll for r in results["ibs"]]
     ibs_std = [r[2] for r in results["ibs"]]
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
     for method in FIXED_SAMPLING_METHODS:
         samp = [r[0] for r in results[method]]
-        mean = [r[1] for r in results[method]]
+        bias = [r[1] - true_ll for r in results[method]]
         std = [r[2] for r in results[method]]
         label = method.capitalize() if method != "fixed" else "Fixed +1"
         color = get_color(method)
-        axes[0].plot(samp, mean, "o-", label=label, color=color)
+        axes[0].plot(samp, bias, "o-", label=label, color=color)
         axes[1].plot(samp, std, "o-", label=label, color=color)
 
-    axes[0].plot(ibs_samp, ibs_mean, "o-", label="Inverse sampling",
+    axes[0].plot(ibs_samp, ibs_bias, "o-", label="Inverse sampling",
                  color=get_color("ibs"))
+    axes[0].axhline(0, color="gray", linestyle="--")
     axes[0].set_xlabel("Average model samples")
-    axes[0].set_ylabel("Mean log-likelihood")
-    axes[0].legend()
+    axes[0].set_ylabel("Bias")
+    axes[0].legend(frameon=False)
 
     axes[1].plot(ibs_samp, ibs_std, "o-", label="Inverse sampling",
                  color=get_color("ibs"))
     axes[1].set_xlabel("Average model samples")
     axes[1].set_ylabel("Standard deviation")
-    axes[1].legend()
+    axes[1].legend(frameon=False)
 
     fig.tight_layout()
     plt.show()
