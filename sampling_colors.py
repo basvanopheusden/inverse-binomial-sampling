@@ -12,8 +12,21 @@ _COLOR_MAP = {
 
 
 def get_color(name: str) -> str:
-    """Return the color for the given sampling method name."""
+    """Return the color for the given sampling method name.
+
+    Parameters
+    ----------
+    name : str
+        Name of the sampling method. For fixed sampling methods ``name`` may be
+        suffixed with the number of samples (e.g. ``"fixed_2"``).  Such names
+        are mapped to the base ``"fixed"`` color.
+    """
+
+    base_name = name.lower()
+    if base_name.startswith("fixed_"):
+        base_name = "fixed"
+
     try:
-        return _COLOR_MAP[name]
+        return _COLOR_MAP[base_name]
     except KeyError as exc:
         raise ValueError(f"Unknown sampling method '{name}'") from exc
