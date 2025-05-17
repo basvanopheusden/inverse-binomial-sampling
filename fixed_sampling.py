@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Callable, Dict
+from typing import Iterable, Callable, Dict, Tuple
+
+import math
 
 import numpy as np
 
@@ -59,3 +61,46 @@ FIXED_SAMPLING_METHODS: Dict[str, Callable[[Iterable[float]], float]] = {
     "laplace": laplace_log_prob,
     "jeffreys": jeffreys_log_prob,
 }
+
+# Mapping from method name to the corresponding prior parameters
+FIXED_SAMPLING_PARAMS: Dict[str, Tuple[float, float]] = {
+    "naive": (0.0, 0.0),
+    "fixed": (1.0, 1.0),
+    "laplace": (1.0, 2.0),
+    "jeffreys": (0.5, 1.0),
+}
+
+
+def _single_fixed_moments(p: float, M: int, alpha: float, beta: float) -> Tuple[float, float]:
+    """Return mean and variance of the log-prob estimate for one trial."""
+    log_vals = []
+    probs = []
+    for k in range(M + 1):
+        prob = math.comb(M, k) * (p ** k) * ((1.0 - p) ** (M - k))
+        val = math.log((k + alpha) / (M + beta))
+        log_vals.append(val)
+        probs.append(prob)
+
+    mean = sum(pv * lv for pv, lv in zip(probs, log_vals))
+    var = sum(pv * (lv - mean) ** 2 for pv, lv in zip(probs, log_vals))
+    return mean, var
+
+
+def fixed_analytical_mean(probabilities: Iterable[float], M: int, method: str) -> float:
+    """Analytical mean of a fixed-sample log-likelihood estimator."""
+    if method not in FIXED_SAMPLING_PARAMS:
+        raise ValueError(f"Unknown method '{method}'")
+    alpha, beta = FIXED_SAMPLING_PARAMS[method]
+    return float(
+        sum(_single_fixed_moments(p, M, alpha, beta)[0] for p in probabilities)
+    )
+
+
+def fixed_analytical_variance(probabilities: Iterable[float], M: int, method: str) -> float:
+    """Analytical variance of a fixed-sample log-likelihood estimator."""
+    if method not in FIXED_SAMPLING_PARAMS:
+        raise ValueError(f"Unknown method '{method}'")
+    alpha, beta = FIXED_SAMPLING_PARAMS[method]
+    return float(
+        sum(_single_fixed_moments(p, M, alpha, beta)[1] for p in probabilities)
+    )

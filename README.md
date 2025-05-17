@@ -16,4 +16,7 @@ all plots.
 The file `fixed_sampling.py` provides several simple log-probability estimators
 for binary observations based on a fixed number of samples. Methods such as the
 naive empirical mean, a ``+1`` adjustment, Laplace smoothing, and Jeffreys
-smoothing are available via the ``FIXED_SAMPLING_METHODS`` dictionary.
+smoothing are available via the ``FIXED_SAMPLING_METHODS`` dictionary.  In
+addition, ``fixed_analytical_mean`` and ``fixed_analytical_variance`` can be
+used to compute the expected value and variance of these estimators given the
+true success probability and number of samples ``M``.
