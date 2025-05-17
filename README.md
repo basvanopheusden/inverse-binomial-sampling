@@ -10,3 +10,10 @@ To ensure all figures share the same look across experiments, this repository
 provides a small helper in `setup_matplotlib.py`.  Import and call
 `setup_matplotlib()` at the start of your scripts to apply a consistent style for
 all plots.
+
+## Fixed sampling helpers
+
+The file `fixed_sampling.py` provides several simple log-probability estimators
+for binary observations based on a fixed number of samples. Methods such as the
+naive empirical mean, a ``+1`` adjustment, Laplace smoothing, and Jeffreys
+smoothing are available via the ``FIXED_SAMPLING_METHODS`` dictionary.
