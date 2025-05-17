@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-# Pastel palette from colorhunt.co
+# More saturated palette for better contrast
 _COLOR_MAP = {
-    "ibs": "#A0C4FF",
-    "naive": "#FFADAD",
-    "fixed": "#FFD6A5",
-    "laplace": "#FDFFB6",
-    "jeffreys": "#CAFFBF",
+    "ibs": "#4D8CFF",      # vibrant blue
+    "naive": "#FF6B6B",    # strong red
+    "fixed": "#FFA45B",    # saturated orange
+    "laplace": "#FFEB3B",  # bright yellow
+    "jeffreys": "#75FF63", # vivid green
 }
 
 
