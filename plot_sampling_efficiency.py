@@ -4,6 +4,7 @@
 import math
 import random
 import statistics
+from typing import Iterable
 
 from ibs import ibs_loglikelihood
 from fixed_sampling import FIXED_SAMPLING_METHODS
@@ -24,6 +25,20 @@ def bernoulli_model(rng):
 
     return model
 
+
+def _mean_std_ignore_inf(values: Iterable[float]) -> tuple[float, float]:
+    """Return mean and stdev ignoring infinite or NaN values."""
+    values = list(values)
+    finite_vals = [v for v in values if math.isfinite(v)]
+    if not finite_vals:
+        if values and all(v == float("-inf") for v in values):
+            return float("-inf"), 0.0
+        if values and all(v == float("inf") for v in values):
+            return float("inf"), 0.0
+        return float("nan"), float("nan")
+    mean_val = statistics.mean(finite_vals)
+    std_val = statistics.stdev(finite_vals) if len(finite_vals) > 1 else 0.0
+    return mean_val, std_val
 
 def fixed_loglikelihood(stimuli, responses, model, theta, M, method):
     """Estimate log-likelihood using a fixed number of samples per trial.
@@ -95,10 +110,7 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
                 )
                 estimates.append(ll)
                 samples.append(n)
-            mean_ll = statistics.mean(estimates)
-            std_ll = (
-                statistics.stdev(estimates) if len(estimates) > 1 else 0.0
-            )
+            mean_ll, std_ll = _mean_std_ignore_inf(estimates)
             avg_samples = statistics.mean(samples)
             results[method].append((avg_samples, mean_ll, std_ll))
 
@@ -112,8 +124,7 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
                                          repeats=R)
             estimates.append(ll)
             samples.append(n)
-        mean_ll = statistics.mean(estimates)
-        std_ll = statistics.stdev(estimates) if len(estimates) > 1 else 0.0
+        mean_ll, std_ll = _mean_std_ignore_inf(estimates)
         avg_samples = statistics.mean(samples)
         results["ibs"].append((avg_samples, mean_ll, std_ll))
 
