@@ -6,6 +6,7 @@ import random
 import statistics
 
 from ibs import ibs_loglikelihood
+from fixed_sampling import FIXED_SAMPLING_METHODS
 from setup_matplotlib import setup_matplotlib
 from sampling_colors import get_color
 
@@ -24,16 +25,38 @@ def bernoulli_model(rng):
     return model
 
 
-def fixed_loglikelihood(stimuli, responses, model, theta, M):
-    """Estimate log-likelihood with a fixed number of samples per trial."""
+def fixed_loglikelihood(stimuli, responses, model, theta, M, method):
+    """Estimate log-likelihood using a fixed number of samples per trial.
+
+    Parameters
+    ----------
+    stimuli : iterable
+        Input stimuli for each trial.
+    responses : iterable
+        Observed binary responses for each trial.
+    model : callable
+        Simulator function ``model(theta, stimulus) -> response``.
+    theta : object
+        Parameters passed to the simulator.
+    M : int
+        Number of model samples per trial.
+    method : str
+        Name of the fixed sampling method to use (see
+        ``FIXED_SAMPLING_METHODS``).
+    """
+
+    try:
+        log_prob_fn = FIXED_SAMPLING_METHODS[method]
+    except KeyError as exc:
+        raise ValueError(f"Unknown fixed sampling method '{method}'") from exc
+
     log_lik = 0.0
     for s, r_obs in zip(stimuli, responses):
-        matches = 0
+        obs = []
         for _ in range(M):
-            if model(theta, s) == r_obs:
-                matches += 1
-        prob = matches / M if matches else 1e-12
-        log_lik += math.log(prob)
+            obs.append(1.0 if model(theta, s) == r_obs else 0.0)
+        log_lik += log_prob_fn(obs)
+
     total_samples = M * len(responses)
     return log_lik, total_samples
 
@@ -52,21 +75,32 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
     fixed_samples = [1, 2, 3, 5, 8, 10]
     ibs_repeats = [1, 2, 3, 4, 5]
 
-    results = {"fixed": [], "ibs": []}
+    results = {"ibs": []}
+    for method in FIXED_SAMPLING_METHODS:
+        results[method] = []
 
-    for M in fixed_samples:
-        estimates = []
-        samples = []
-        for rep in range(repetitions):
-            rng_run = random.Random(seed + rep)
-            ll, n = fixed_loglikelihood(stimuli, responses,
-                                        bernoulli_model(rng_run), p, M)
-            estimates.append(ll)
-            samples.append(n)
-        mean_ll = statistics.mean(estimates)
-        std_ll = statistics.stdev(estimates) if len(estimates) > 1 else 0.0
-        avg_samples = statistics.mean(samples)
-        results["fixed"].append((avg_samples, mean_ll, std_ll))
+    for method in FIXED_SAMPLING_METHODS:
+        for M in fixed_samples:
+            estimates = []
+            samples = []
+            for rep in range(repetitions):
+                rng_run = random.Random(seed + rep)
+                ll, n = fixed_loglikelihood(
+                    stimuli,
+                    responses,
+                    bernoulli_model(rng_run),
+                    p,
+                    M,
+                    method,
+                )
+                estimates.append(ll)
+                samples.append(n)
+            mean_ll = statistics.mean(estimates)
+            std_ll = (
+                statistics.stdev(estimates) if len(estimates) > 1 else 0.0
+            )
+            avg_samples = statistics.mean(samples)
+            results[method].append((avg_samples, mean_ll, std_ll))
 
     for R in ibs_repeats:
         estimates = []
@@ -90,19 +124,20 @@ def main():
     setup_matplotlib()
     results = run_experiment()
 
-    fixed_samples = [1, 2, 3, 5, 8, 10]
-
     ibs_samp = [r[0] for r in results["ibs"]]
     ibs_mean = [r[1] for r in results["ibs"]]
     ibs_std = [r[2] for r in results["ibs"]]
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
-    for M, (samp, mean, std) in zip(fixed_samples, results["fixed"]):
-        label = f"Fixed {M}"
-        color = get_color(f"fixed_{M}")
-        axes[0].plot([samp], [mean], "o-", label=label, color=color)
-        axes[1].plot([samp], [std], "o-", label=label, color=color)
+    for method in FIXED_SAMPLING_METHODS:
+        samp = [r[0] for r in results[method]]
+        mean = [r[1] for r in results[method]]
+        std = [r[2] for r in results[method]]
+        label = method.capitalize() if method != "fixed" else "Fixed +1"
+        color = get_color(method)
+        axes[0].plot(samp, mean, "o-", label=label, color=color)
+        axes[1].plot(samp, std, "o-", label=label, color=color)
 
     axes[0].plot(ibs_samp, ibs_mean, "o-", label="Inverse sampling",
                  color=get_color("ibs"))
