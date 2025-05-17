@@ -107,3 +107,49 @@ def ibs_loglikelihood(
     log_like = float(np.mean(log_vals))
     variance = float(np.sum(var_vals)) / (repeats ** 2)
     return log_like, variance, total_samples
+
+
+def ibs_analytical_mean(probabilities: Iterable[float]) -> float:
+    """Analytical mean of the IBS log-likelihood estimate.
+
+    Parameters
+    ----------
+    probabilities : iterable of float
+        Probability that the simulator reproduces the observed response for each
+        trial.
+
+    Returns
+    -------
+    float
+        Expected value of the IBS log-likelihood estimator.
+    """
+    return float(np.sum(np.log(probabilities)))
+
+
+def _dilogarithm(x: float, tol: float = 1e-12, max_iter: int = 100000) -> float:
+    """Compute ``Li_2(x)`` for ``0 \u2264 x < 1`` using its series expansion."""
+    result = 0.0
+    term = x
+    k = 1
+    while abs(term) > tol and k < max_iter:
+        result += term / (k * k)
+        k += 1
+        term *= x
+    return result
+
+
+def ibs_analytical_variance(probabilities: Iterable[float]) -> float:
+    """Analytical variance of the IBS log-likelihood estimate.
+
+    Parameters
+    ----------
+    probabilities : iterable of float
+        Probability that the simulator reproduces the observed response for each
+        trial.
+
+    Returns
+    -------
+    float
+        Variance of the IBS log-likelihood estimator.
+    """
+    return float(np.sum(_dilogarithm(1.0 - p) for p in probabilities))
