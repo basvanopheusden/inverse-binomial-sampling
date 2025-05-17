@@ -7,6 +7,7 @@ import statistics
 
 from ibs import ibs_loglikelihood
 from setup_matplotlib import setup_matplotlib
+from sampling_colors import get_color
 
 try:
     from matplotlib import pyplot as plt
@@ -83,9 +84,7 @@ def main():
     setup_matplotlib()
     results = run_experiment()
 
-    fixed_samp = [r[0] for r in results["fixed"]]
-    fixed_mean = [r[1] for r in results["fixed"]]
-    fixed_std = [r[2] for r in results["fixed"]]
+    fixed_samples = [1, 2, 3, 5, 8, 10]
 
     ibs_samp = [r[0] for r in results["ibs"]]
     ibs_mean = [r[1] for r in results["ibs"]]
@@ -93,14 +92,20 @@ def main():
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
-    axes[0].plot(fixed_samp, fixed_mean, "o-", label="Fixed samples")
-    axes[0].plot(ibs_samp, ibs_mean, "o-", label="Inverse sampling")
+    for M, (samp, mean, std) in zip(fixed_samples, results["fixed"]):
+        label = f"Fixed {M}"
+        color = get_color(f"fixed_{M}")
+        axes[0].plot([samp], [mean], "o-", label=label, color=color)
+        axes[1].plot([samp], [std], "o-", label=label, color=color)
+
+    axes[0].plot(ibs_samp, ibs_mean, "o-", label="Inverse sampling",
+                 color=get_color("ibs"))
     axes[0].set_xlabel("Average model samples")
     axes[0].set_ylabel("Mean log-likelihood")
     axes[0].legend()
 
-    axes[1].plot(fixed_samp, fixed_std, "o-", label="Fixed samples")
-    axes[1].plot(ibs_samp, ibs_std, "o-", label="Inverse sampling")
+    axes[1].plot(ibs_samp, ibs_std, "o-", label="Inverse sampling",
+                 color=get_color("ibs"))
     axes[1].set_xlabel("Average model samples")
     axes[1].set_ylabel("Standard deviation")
     axes[1].legend()
