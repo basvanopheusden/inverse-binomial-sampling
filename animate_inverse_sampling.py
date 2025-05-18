@@ -103,7 +103,8 @@ def main() -> None:
         repeat=False,
     )
     plt.show()
+    return anim
 
 
 if __name__ == "__main__":
-    main()
+    _anim = main()
