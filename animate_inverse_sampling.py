@@ -91,7 +91,9 @@ def main() -> None:
             fixed_text.set_text(f"Samples: {M}\nLL = {fixed_ll:.2f}")
         return ibs_scatter, fixed_scatter, ibs_text, fixed_text
 
-    FuncAnimation(
+    # Keep a reference to the animation object to prevent it from
+    # being garbage collected before ``plt.show`` renders it.
+    anim = FuncAnimation(
         fig,
         update,
         frames=frames,
