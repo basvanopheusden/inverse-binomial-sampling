@@ -40,6 +40,16 @@ def _mean_std_ignore_inf(values: Iterable[float]) -> tuple[float, float]:
     std_val = statistics.stdev(finite_vals) if len(finite_vals) > 1 else 0.0
     return mean_val, std_val
 
+
+def _rmse_ignore_inf(values: Iterable[float], truth: float) -> float:
+    """Return RMSE relative to ``truth`` ignoring infinite or NaN values."""
+    diffs = [
+        (v - truth) ** 2 for v in values if math.isfinite(v)
+    ]
+    if not diffs:
+        return float("nan")
+    return math.sqrt(statistics.mean(diffs))
+
 def fixed_loglikelihood(stimuli, responses, model, theta, M, method):
     """Estimate log-likelihood using a fixed number of samples per trial.
 
@@ -113,7 +123,8 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
                 samples.append(n)
             mean_ll, std_ll = _mean_std_ignore_inf(estimates)
             avg_samples = statistics.mean(samples)
-            results[method].append((avg_samples, mean_ll, std_ll))
+            rmse = _rmse_ignore_inf(estimates, true_ll)
+            results[method].append((avg_samples, mean_ll, std_ll, rmse))
 
     for R in ibs_repeats:
         estimates = []
@@ -127,7 +138,8 @@ def run_experiment(p=0.3, n_trials=20, repetitions=100, seed=123):
             samples.append(n)
         mean_ll, std_ll = _mean_std_ignore_inf(estimates)
         avg_samples = statistics.mean(samples)
-        results["ibs"].append((avg_samples, mean_ll, std_ll))
+        rmse = _rmse_ignore_inf(estimates, true_ll)
+        results["ibs"].append((avg_samples, mean_ll, std_ll, rmse))
 
     return results, true_ll
 
@@ -139,17 +151,20 @@ def main():
     ibs_samp = [r[0] for r in results["ibs"]]
     ibs_bias = [r[1] - true_ll for r in results["ibs"]]
     ibs_std = [r[2] for r in results["ibs"]]
+    ibs_rmse = [r[3] for r in results["ibs"]]
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
     for method in FIXED_SAMPLING_METHODS:
         samp = [r[0] for r in results[method]]
         bias = [r[1] - true_ll for r in results[method]]
         std = [r[2] for r in results[method]]
+        rmse = [r[3] for r in results[method]]
         label = method.capitalize() if method != "fixed" else "Fixed +1"
         color = get_color(method)
         axes[0].plot(samp, bias, "o-", label=label, color=color)
         axes[1].plot(samp, std, "o-", label=label, color=color)
+        axes[2].plot(samp, rmse, "o-", label=label, color=color)
 
     axes[0].plot(ibs_samp, ibs_bias, "o-", label="Inverse sampling",
                  color=get_color("ibs"))
@@ -163,6 +178,12 @@ def main():
     axes[1].set_xlabel("Average model samples")
     axes[1].set_ylabel("Standard deviation")
     axes[1].legend(frameon=False)
+
+    axes[2].plot(ibs_samp, ibs_rmse, "o-", label="Inverse sampling",
+                 color=get_color("ibs"))
+    axes[2].set_xlabel("Average model samples")
+    axes[2].set_ylabel("RMSE")
+    axes[2].legend(frameon=False)
 
     fig.tight_layout()
     plt.show()
