@@ -71,6 +71,8 @@ def main() -> None:
     fixed_text = axes[1].text(0.05, 0.9, "", transform=axes[1].transAxes)
 
     def init() -> tuple:
+        ibs_scatter.set_offsets([])
+        fixed_scatter.set_offsets([])
         ibs_text.set_text("")
         fixed_text.set_text("")
         return ibs_scatter, fixed_scatter, ibs_text, fixed_text
@@ -89,6 +91,8 @@ def main() -> None:
             fixed_text.set_text(f"Samples: {M}\nLL = {fixed_ll:.2f}")
         return ibs_scatter, fixed_scatter, ibs_text, fixed_text
 
+    # Keep a reference to the animation object to prevent it from
+    # being garbage collected before ``plt.show`` renders it.
     anim = FuncAnimation(
         fig,
         update,
