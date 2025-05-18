@@ -7,6 +7,7 @@ import random
 
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
+from numpy import empty
 from scipy.special import digamma
 
 from setup_matplotlib import setup_matplotlib
@@ -71,8 +72,8 @@ def main() -> None:
     fixed_text = axes[1].text(0.05, 0.9, "", transform=axes[1].transAxes)
 
     def init() -> tuple:
-        ibs_scatter.set_offsets([])
-        fixed_scatter.set_offsets([])
+        ibs_scatter.set_offsets(empty((0, 2)))
+        fixed_scatter.set_offsets(empty((0, 2)))
         ibs_text.set_text("")
         fixed_text.set_text("")
         return ibs_scatter, fixed_scatter, ibs_text, fixed_text
