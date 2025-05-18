@@ -20,3 +20,17 @@ smoothing are available via the ``FIXED_SAMPLING_METHODS`` dictionary.  In
 addition, ``fixed_analytical_mean`` and ``fixed_analytical_variance`` can be
 used to compute the expected value and variance of these estimators given the
 true success probability and number of samples ``M``.
+
+
+## Animated demonstration
+
+A basic animation script, `animate_inverse_sampling.py`, is provided to
+visualise how inverse sampling stops as soon as a matching model response
+is observed. The script compares this behaviour to a fixed-sample approach
+and displays the total number of samples used by each method. Run it with
+
+```bash
+python animate_inverse_sampling.py
+```
+
+which will open a window showing the animation.
